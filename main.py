@@ -1,6 +1,8 @@
 import csv
 from datetime import datetime
 
+# We read the csv file and we create a list of cars
+
 with open('data/data2023.csv', 'r') as csv_file:
     csv_reader = csv.reader(csv_file)
     cars = []
@@ -23,6 +25,8 @@ with open('data/data2023.csv', 'r') as csv_file:
             startAndStop = 1
         else :
             startAndStop = 0
+
+        # We create a car object using the right data
 
         car = {
             'brand': line[2],
@@ -55,10 +59,14 @@ with open('data/data2023.csv', 'r') as csv_file:
         }
         cars.append(car)
 
+    # We create the sql script
+
     script = ""
     for car in cars :
         script += "INSERT INTO car_th (brand, model, cylinder, car_transmission, city_fuel, highway_fuel, combined_fuel, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, spend_on_five_years, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, highway_carbon, combined_carbon) VALUES "
         script += "(" + "'" + car['brand'] + "', '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmissionTypeLabel'] + "', '" + car['cityFuel'] + "', '" + car['highwayFuel'] + "', '" + car['combinedFuel'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioEthanol']) + "', '" + car['annualFuelCost'] + "', '" + car['spendOnFiveYears'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['highwayCarbon'] + "', '" + car['combinedCarbon'] + "');\n"
+    
+    # We create the file
     
     now = datetime.now()
     fileName = "carsTH-" + now.strftime("%d%m%Y%H%M%S") + ".sql"
