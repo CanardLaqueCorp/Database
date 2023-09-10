@@ -7,6 +7,7 @@ fuelTypes = []
 carLineTypes = []
 transmissionTypes = []
 driveSystemTypes = []
+brands = []
 
 bestBioFuel = 0
 bestCombinedFuel = 0
@@ -51,6 +52,16 @@ def getDriveSystemId(driveSystemCode, driveSystemLabel) :
     # if we don't find the drive system in the list we add it and we return the id
     driveSystemTypes.append({'id' : len(driveSystemTypes) + 1, 'code' : driveSystemCode, 'label' : driveSystemLabel})
     return len(driveSystemTypes)
+
+# Returns the id of the brand and add it to the list if it is a new brand
+def getBrandId(brandLabel) :
+    # if we find the brand in the list we return the id
+    for brand in brands :
+        if (brand['label'] == brandLabel) :
+            return brand['id']
+    # if we don't find the brand in the list we add it and we return the id
+    brands.append({'id' : len(brands) + 1, 'label' : brandLabel})
+    return len(brands)
 
 # We read the csv file and we create a list of cars
 
@@ -99,11 +110,15 @@ with open('data/data2023.csv', 'r') as csv_file:
         driveSystemCode = line[27]
         driveSystemLabel = line[28]
         driveSystemId = getDriveSystemId(driveSystemCode, driveSystemLabel)
+
+        # Brand
+
+        brandId = getBrandId(line[2])
             
         # We create a car object using the right data
 
         car = {
-            'brand': line[2],
+            'brandId': brandId,
             'model': line[3],
             'cylinder': line[7],
             'transmission': line[8],
@@ -173,8 +188,8 @@ with open('data/data2023.csv', 'r') as csv_file:
 
         ecoScore = round(ecoScore * 100)
 
-        script += "INSERT INTO car_th (eco_score, car_transmission_type_id, car_drive_system_id, car_fuel_id, car_line_type_id, brand, model, cylinder, car_transmission, city_fuel, highway_fuel, combined_fuel, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, spend_on_five_years, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, highway_carbon, combined_carbon) VALUES "
-        script += "(" + str(ecoScore) + ", " + str(car['transmissionTypeId']) + ", " + str(car['driveSystemId']) + ", " + str(car['fuelTypeId']) + ", " + str(car['carLineId']) + ", '" + car['brand'] + "', '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmission'] + "', '" + car['cityFuel'] + "', '" + car['highwayFuel'] + "', '" + car['combinedFuel'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioFuel']) + "', '" + car['annualFuelCost'] + "', '" + car['spendOnFiveYears'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['highwayCarbon'] + "', '" + car['combinedCarbon'] + "');\n"
+        script += "INSERT INTO car_th (eco_score, car_transmission_type_id, car_drive_system_id, car_fuel_id, car_line_type_id, car_brand_id, model, cylinder, car_transmission, city_fuel, highway_fuel, combined_fuel, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, spend_on_five_years, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, highway_carbon, combined_carbon) VALUES "
+        script += "(" + str(ecoScore) + ", " + str(car['transmissionTypeId']) + ", " + str(car['driveSystemId']) + ", " + str(car['fuelTypeId']) + ", " + str(car['carLineId']) + ", " + str(car['brandId']) + ", '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmission'] + "', '" + car['cityFuel'] + "', '" + car['highwayFuel'] + "', '" + car['combinedFuel'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioFuel']) + "', '" + car['annualFuelCost'] + "', '" + car['spendOnFiveYears'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['highwayCarbon'] + "', '" + car['combinedCarbon'] + "');\n"
     
     # We create the file
     
@@ -240,6 +255,21 @@ with open('data/data2023.csv', 'r') as csv_file:
 
     now = datetime.now()
     fileName = "driveSystems-" + now.strftime("%d%m%Y%H%M%S") + ".sql"
+    file = open('exports/' + fileName, 'w')
+    file.write(script)
+    file.close()
+
+    # we create the sql script for the brand table
+
+    script = ""
+    for brand in brands :
+        script += "INSERT INTO brand (id, label) VALUES "
+        script += "(" + str(brand['id']) + ", '" + brand['label'] + "');\n"
+    
+    # We create the file
+
+    # now = datetime.now()
+    fileName = "brands-" + now.strftime("%d%m%Y%H%M%S") + ".sql"
     file = open('exports/' + fileName, 'w')
     file.write(script)
     file.close()
