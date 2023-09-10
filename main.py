@@ -8,6 +8,10 @@ carLineTypes = []
 transmissionTypes = []
 driveSystemTypes = []
 
+bestBioFuel = 0
+bestCombinedFuel = 0
+bestCombinedCarbon = 10000
+
 # Returns the id of the transmission type and add it to the list if it is a new transmission type
 def getTransmissionId(transmissionTypeCode, transmissionTypeLabel) :
     # if we find the transmission in the list we return the id
@@ -56,9 +60,9 @@ with open('data/data2023.csv', 'r') as csv_file:
     for line in csv_reader:
         line = line[0].split(';')
 
-        maxBioEthanol = line[29]
-        if (maxBioEthanol == ''):
-            maxBioEthanol = 0
+        maxBioFuel = line[29]
+        if (maxBioFuel == ''):
+            maxBioFuel = 0
         
         guzzler = line[18]
         if (guzzler == 'G') :
@@ -111,7 +115,7 @@ with open('data/data2023.csv', 'r') as csv_file:
             'combinedFuel': line[17],
             'guzzler': guzzler,
             'startAndStop': startAndStop,
-            'maxBioEthanol': maxBioEthanol,
+            'maxBioFuel': maxBioFuel,
             'fuelTypeId': fuelTypeId,
             'annualFuelCost': line[44],
             'carLineId': carLineId,
@@ -123,6 +127,16 @@ with open('data/data2023.csv', 'r') as csv_file:
             'highwayCarbon' : line[153],
             'combinedCarbon' : line[154],
         }
+
+        if (car['combinedFuel'] != '' and float(car['combinedFuel']) > bestCombinedFuel) :
+            bestCombinedFuel = float(car['combinedFuel'])
+        
+        if (car['combinedCarbon'] != '' and float(car['combinedCarbon']) < bestCombinedCarbon) :
+            bestCombinedCarbon = float(car['combinedCarbon'])
+
+        if (car['maxBioFuel'] != '' and float(car['maxBioFuel']) > bestBioFuel) :
+            bestBioFuel = float(car['maxBioFuel'])
+
         cars.append(car)
 
 
@@ -131,13 +145,36 @@ with open('data/data2023.csv', 'r') as csv_file:
     for file in os.listdir('exports'):
         os.rename('exports/' + file, 'old_exports/' + file)
 
-
     # We create the sql script fro the cars_th table
 
     script = ""
+    bestBioFuel = float(bestBioFuel)
+    bestCombinedFuel = float(bestCombinedFuel)
+    bestCombinedCarbon = float(bestCombinedCarbon)
     for car in cars :
-        script += "INSERT INTO car_th (car_transmission_type_id, car_drive_system_id, car_fuel_id, car_line_type_id, brand, model, cylinder, car_transmission, city_fuel, highway_fuel, combined_fuel, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, spend_on_five_years, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, highway_carbon, combined_carbon) VALUES "
-        script += "(" + str(car['transmissionTypeId']) + ", " + str(car['driveSystemId']) + ", " + str(car['fuelTypeId']) + ", " + str(car['carLineId']) + ", '" + car['brand'] + "', '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmission'] + "', '" + car['cityFuel'] + "', '" + car['highwayFuel'] + "', '" + car['combinedFuel'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioEthanol']) + "', '" + car['annualFuelCost'] + "', '" + car['spendOnFiveYears'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['highwayCarbon'] + "', '" + car['combinedCarbon'] + "');\n"
+
+        # We calculate the eco score
+
+        bioFuelDelta = float(car['maxBioFuel']) / bestBioFuel
+        combinedFuelDelta = float(car['combinedFuel']) / bestCombinedFuel
+        combinedCarbonDelta = 1 - bestCombinedCarbon / float(car['combinedCarbon'])
+        fuelRate = float(car['fuelRate']) / 10
+        ghgRate = float(car['ghgRate']) / 10
+        smogRate = float(car['smogRate']) / 10
+
+        ecoScore = bioFuelDelta + 2 * combinedFuelDelta + 2 * combinedCarbonDelta + 3 * fuelRate + 3 * ghgRate + 3 * smogRate
+        ecoScore = ecoScore / 14
+
+        if(int(car['startAndStop']) == 1) :
+            ecoScore *= 1.05
+        
+        if(int(car['guzzler']) == 1) :
+            ecoScore *= 0.95
+
+        ecoScore = round(ecoScore * 100)
+
+        script += "INSERT INTO car_th (ecoScore, car_transmission_type_id, car_drive_system_id, car_fuel_id, car_line_type_id, brand, model, cylinder, car_transmission, city_fuel, highway_fuel, combined_fuel, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, spend_on_five_years, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, highway_carbon, combined_carbon) VALUES "
+        script += "(" + str(ecoScore) + ", " + str(car['transmissionTypeId']) + ", " + str(car['driveSystemId']) + ", " + str(car['fuelTypeId']) + ", " + str(car['carLineId']) + ", '" + car['brand'] + "', '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmission'] + "', '" + car['cityFuel'] + "', '" + car['highwayFuel'] + "', '" + car['combinedFuel'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioFuel']) + "', '" + car['annualFuelCost'] + "', '" + car['spendOnFiveYears'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['highwayCarbon'] + "', '" + car['combinedCarbon'] + "');\n"
     
     # We create the file
     
@@ -206,8 +243,4 @@ with open('data/data2023.csv', 'r') as csv_file:
     file = open('exports/' + fileName, 'w')
     file.write(script)
     file.close()
-
-
-
-
     
