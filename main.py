@@ -87,6 +87,66 @@ with open('data/data2023.csv', 'r') as csv_file:
         else :
             startAndStop = 0
 
+        # Converting units
+
+        # Miles per gallon
+        cityFuel = line[15]
+        highwayFuel = line[16]
+        combinedFuel = line[17]
+
+        # Liter per 100 km
+        if (cityFuel != '') :
+            cityFuelMetric = str(round(235.215 / float(cityFuel), 3))
+        else :
+            cityFuelMetric = ''
+
+        if (highwayFuel != '') :
+            highwayFuelMetric = str(round(235.215 / float(highwayFuel), 3))
+        else :
+            highwayFuelMetric = ''
+        
+        if (combinedFuel != '') :
+            combinedFuelMetric = str(round(235.215 / float(combinedFuel), 3))
+        else :
+            combinedFuelMetric = ''
+
+        # $
+        annualFuelCost = line[44]
+        spendOnFiveYears = line[151]
+
+        # €
+        if (annualFuelCost != '') :
+            annualFuelCostEuro = str(round(float(annualFuelCost) * 0.95, 0))
+        else :
+            annualFuelCostEuro = ''
+        
+        if (spendOnFiveYears != '') :
+            spendOnFiveYearsEuro = str(round(float(spendOnFiveYears) * 0.95, 0))
+        else :
+            spendOnFiveYearsEuro = ''
+        
+        # g/100 miles
+        cityCarbon = line[152]
+        highwayCarbon = line[153]
+        combinedCarbon = line[154]
+
+        # g/100km
+
+        if (cityCarbon != '') :
+            cityCarbonMetric = str(round(float(cityCarbon) / 1.609, 0))
+        else :
+            cityCarbonMetric = ''
+
+        if (highwayCarbon != '') :
+            highwayCarbonMetric = str(round(float(highwayCarbon) / 1.609, 0))
+        else :
+            highwayCarbonMetric = ''
+
+        if (combinedCarbon != '') :
+            combinedCarbonMetric = str(round(float(combinedCarbon) / 1.609, 0))
+        else :
+            combinedCarbonMetric = ''
+
         # Transimission type
 
         transmissionTypeCode = line[21]
@@ -125,22 +185,30 @@ with open('data/data2023.csv', 'r') as csv_file:
             'transmissionTypeId': transmissionTypeId,
             'driveSystemId' : driveSystemId,
             'gears': line[24],
-            'cityFuel': line[15],
-            'highwayFuel': line[16],
-            'combinedFuel': line[17],
+            'cityFuel': cityFuel,
+            'cityFuelMetric': cityFuelMetric,
+            'highwayFuel': highwayFuel,
+            'highwayFuelMetric': highwayFuelMetric,
+            'combinedFuel': combinedFuel,
+            'combinedFuelMetric': combinedFuelMetric,
             'guzzler': guzzler,
             'startAndStop': startAndStop,
             'maxBioFuel': maxBioFuel,
             'fuelTypeId': fuelTypeId,
-            'annualFuelCost': line[44],
+            'annualFuelCost': annualFuelCost,
+            'annualFuelCostEuro': annualFuelCostEuro,
             'carLineId': carLineId,
             'fuelRate' : line[131],
             'ghgRate' : line[132],
             'smogRate' : line[135],
-            'spendOnFiveYears' : line[151],
-            'cityCarbon' : line[152],
-            'highwayCarbon' : line[153],
-            'combinedCarbon' : line[154],
+            'spendOnFiveYears' : spendOnFiveYears,
+            'spendOnFiveYearsEuro' : spendOnFiveYearsEuro,
+            'cityCarbon' : cityCarbon,
+            'cityCarbonMetric' : cityCarbonMetric,
+            'highwayCarbon' : highwayCarbon,
+            'highwayCarbonMetric' : highwayCarbonMetric,
+            'combinedCarbon' : combinedCarbon,
+            'combinedCarbonMetric' : combinedCarbonMetric
         }
 
         if (car['combinedFuel'] != '' and float(car['combinedFuel']) > bestCombinedFuel) :
@@ -191,8 +259,8 @@ with open('data/data2023.csv', 'r') as csv_file:
         if (ecoScore > 100) :
             ecoScore = 100
 
-        script += "INSERT INTO car_th (eco_score, car_transmission_type_id, car_drive_system_id, car_fuel_id, car_line_type_id, car_brand_id, model, cylinder, car_transmission, city_fuel, highway_fuel, combined_fuel, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, spend_on_five_years, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, highway_carbon, combined_carbon) VALUES "
-        script += "(" + str(ecoScore) + ", " + str(car['transmissionTypeId']) + ", " + str(car['driveSystemId']) + ", " + str(car['fuelTypeId']) + ", " + str(car['carLineId']) + ", " + str(car['brandId']) + ", '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmission'] + "', '" + car['cityFuel'] + "', '" + car['highwayFuel'] + "', '" + car['combinedFuel'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioFuel']) + "', '" + car['annualFuelCost'] + "', '" + car['spendOnFiveYears'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['highwayCarbon'] + "', '" + car['combinedCarbon'] + "');\n"
+        script += "INSERT INTO car_th (eco_score, car_transmission_type_id, car_drive_system_id, car_fuel_id, car_line_type_id, car_brand_id, model, cylinder, car_transmission, city_fuel, city_fuel_metric, highway_fuel, highway_fuel_metric, combined_fuel, combined_fuel_metric, has_guzzler, gears, max_bio_fuel, annual_fuel_cost, annual_fuel_cost_euro, spend_on_five_years, spend_on_five_years_euro, has_start_and_stop, fe_rating, ghg_rating, smog_rating, city_carbon, city_carbon_metric, highway_carbon, highway_carbon_metric, combined_carbon, combined_carbon_metric) VALUES "
+        script += "(" + str(ecoScore) + ", " + str(car['transmissionTypeId']) + ", " + str(car['driveSystemId']) + ", " + str(car['fuelTypeId']) + ", " + str(car['carLineId']) + ", " + str(car['brandId']) + ", '" + car['model'] + "', '" + car['cylinder'] + "', '" + car['transmission'] + "', '" + car['cityFuel'] + "', '" + car['cityFuelMetric'] + "', '" + car['highwayFuel'] + "', '" + car['highwayFuelMetric'] + "', '" + car['combinedFuel'] + "', '" + car['combinedFuelMetric'] + "', '" + str(car['guzzler']) + "', '" + car['gears'] + "', '" + str(car['maxBioFuel']) + "', '" + car['annualFuelCost'] + "', '" + car['annualFuelCostEuro'] + "', '" + car['spendOnFiveYears'] + "', '" + car['spendOnFiveYearsEuro'] + "', '" + str(car['startAndStop']) + "', '" + car['fuelRate'] + "', '" + car['ghgRate'] + "', '" + car['smogRate'] + "', '" + car['cityCarbon'] + "', '" + car['cityCarbonMetric'] + "', '" + car['highwayCarbon'] + "', '" + car['highwayCarbonMetric'] + "', '" + car['combinedCarbon'] + "', '" + car['combinedCarbonMetric'] + "');\n"
     
     # We create the file
     
